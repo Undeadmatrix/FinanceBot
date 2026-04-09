@@ -1,0 +1,14 @@
+market_data:
+  source: synthetic
+model:
+  name: logistic_regression
+  task: classification
+strategy:
+  long_only: true
+backtest:
+  initial_cash: 100000.0
+  retrain_frequency_bars: 21
+  min_train_bars: 252
+  results_dir: artifacts/backtests
+broker:
+  mode: simulation

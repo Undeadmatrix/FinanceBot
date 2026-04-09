@@ -1,0 +1,7 @@
+broker:
+  mode: paper
+  provider: mock
+  paper_guard_enabled: true
+  live_trading_enabled: false
+risk:
+  human_enabled: true

@@ -1,0 +1,98 @@
+market_data:
+  source: synthetic
+  timezone: UTC
+  synthetic:
+    instruments: ["SYNTH_A", "SYNTH_B"]
+    start_date: "2020-01-01"
+    periods: 900
+    freq: "B"
+    seed: 7
+    start_price: 100.0
+    trend_drift: 0.0008
+    mean_reversion_strength: 0.15
+    volatility: 0.015
+    volatility_cluster: 0.25
+    jump_probability: 0.02
+    jump_scale: 0.05
+    regime_shift_probability: 0.05
+    outlier_probability: 0.01
+features:
+  lags: [1, 2, 5, 10]
+  rolling_windows: [5, 10, 20, 60]
+  rsi_window: 14
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  zscore_window: 20
+  volatility_window: 20
+  drawdown_window: 60
+  min_history: 60
+labels:
+  target: next_direction
+  horizon: 1
+  horizons: [1, 5, 10]
+  cost_buffer_bps: 15.0
+  action_threshold: 0.001
+model:
+  name: logistic_regression
+  task: classification
+  calibrate: true
+  hyperparameter_search: false
+  random_state: 7
+  max_iter: 1000
+  cv_splits: 3
+  model_dir: artifacts/models
+strategy:
+  long_only: true
+  probability_buy_threshold: 0.55
+  probability_sell_threshold: 0.45
+  expected_return_threshold: 0.0005
+  cost_buffer_bps: 10.0
+  confidence_threshold: 0.05
+  no_trade_band: 0.02
+  cooldown_bars_after_loss_streak: 3
+  max_loss_streak: 3
+execution:
+  commission_per_order: 1.0
+  fee_bps: 2.0
+  spread_bps: 5.0
+  slippage_bps: 3.0
+  market_impact_bps: 1.0
+  allow_partial_fills: false
+tax:
+  enabled: true
+  mode: accrued
+  flat_rate: 0.25
+  short_term_rate: 0.30
+  long_term_rate: 0.18
+  long_term_days: 365
+  net_losses: true
+risk:
+  max_position_fraction: 0.25
+  max_gross_exposure: 1.0
+  sizing_mode: fixed_fractional
+  fixed_fraction: 0.15
+  target_volatility: 0.10
+  max_trades_per_day: 10
+  max_daily_loss_fraction: 0.03
+  max_drawdown_fraction: 0.20
+  kill_switch: false
+  human_enabled: false
+walk_forward:
+  train_bars: 252
+  validation_bars: 63
+  test_bars: 63
+  step_bars: 63
+  retrain_frequency_bars: 21
+backtest:
+  initial_cash: 100000.0
+  benchmark: ["buy_and_hold", "random", "moving_average_crossover", "momentum"]
+  retrain_frequency_bars: 21
+  min_train_bars: 252
+  results_dir: artifacts/runs
+  seed: 7
+broker:
+  mode: simulation
+  provider: mock
+  paper_guard_enabled: true
+  live_trading_enabled: false
