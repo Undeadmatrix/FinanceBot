@@ -24,6 +24,7 @@ from trading_platform.strategies.position_sizer import PositionSizer
 from trading_platform.strategies.risk_manager import RiskManager, RiskState
 from trading_platform.strategies.signal_policy import ProbabilitySignalPolicy, StrategyContext
 from trading_platform.strategies.trade_filters import TradeFilterEngine
+from trading_platform.utils.reporting import write_backtest_report, write_paper_report, write_walk_forward_report
 from trading_platform.utils.serialization import deep_merge, dump_json, load_yaml, model_to_dict
 from trading_platform.utils.validation import PlatformConfig
 
@@ -113,6 +114,14 @@ def run_backtest(config: PlatformConfig, output_dir: str | Path | None = None, i
     )
     if result.feature_importance is not None:
         result.feature_importance.to_csv(Path(target_dir) / "feature_importance.csv", header=["importance"])
+    write_backtest_report(
+        target_dir,
+        metrics=result.metrics,
+        trades=result.trades,
+        snapshots=result.snapshots,
+        benchmark_results=result.benchmark_results,
+        feature_importance=result.feature_importance,
+    )
     LOGGER.info("Backtest completed in %s", target_dir)
     return result, target_dir
 
@@ -123,6 +132,7 @@ def run_walk_forward(config: PlatformConfig, output_dir: str | Path | None = Non
     run = experiment.start_run(config, prefix="walk_forward")
     target_dir = Path(output_dir) if output_dir is not None else run.run_dir
     summary = WalkForwardValidator(config).run(bundle, output_dir=target_dir)
+    write_walk_forward_report(target_dir, summary)
     LOGGER.info("Walk-forward summary saved to %s", target_dir)
     return summary, target_dir
 
@@ -207,6 +217,7 @@ def run_paper_simulation(config: PlatformConfig, output_dir: str | Path | None =
     target_dir = Path(output_dir or Path(config.backtest.results_dir) / "paper_sim")
     target_dir.mkdir(parents=True, exist_ok=True)
     dump_json(target_dir / "paper_simulation.json", results)
+    write_paper_report(target_dir, results)
     return {"results": results, "output_dir": str(target_dir)}
 
 
@@ -281,18 +292,21 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "run-backtest":
         result, target_dir = run_backtest(config, output_dir=args.output_dir)
         print(f"Backtest complete. Results in {target_dir}")
+        print(f"Text report: {Path(target_dir) / 'backtest_report.txt'}")
         print(result.metrics)
         return 0
 
     if args.command == "run-walk-forward":
         summary, target_dir = run_walk_forward(config, output_dir=args.output_dir)
         print(f"Walk-forward complete. Results in {target_dir}")
+        print(f"Text report: {Path(target_dir) / 'walk_forward_report.txt'}")
         print(summary.tail())
         return 0
 
     if args.command == "run-paper":
         paper_result = run_paper_simulation(config, output_dir=args.output_dir)
         print(f"Paper simulation complete. Results in {paper_result['output_dir']}")
+        print(f"Text report: {Path(paper_result['output_dir']) / 'paper_report.txt'}")
         return 0
 
     parser.error("Unknown command")

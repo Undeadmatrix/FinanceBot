@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from trading_platform.app import build_dataset_bundle, load_platform_config, run_backtest
+from trading_platform.app import build_dataset_bundle, load_platform_config, run_backtest, run_paper_simulation
 from trading_platform.data.market_data_loader import MarketDataLoader
 from trading_platform.data.synthetic_generator import generate_synthetic_market
 from trading_platform.tests.helpers import make_test_config
@@ -15,6 +15,7 @@ def test_end_to_end_synthetic_pipeline_runs(tmp_path):
     result, output_dir = run_backtest(config, output_dir=tmp_path / "backtest")
 
     assert (Path(output_dir) / "backtest_equity.png").exists()
+    assert (Path(output_dir) / "backtest_report.txt").exists()
     assert "buy_and_hold" in result.benchmark_results
     assert "benchmark_total_return" in result.metrics
 
@@ -45,3 +46,13 @@ def test_historical_csv_backtest_integration(tmp_path):
     result, _ = run_backtest(csv_config, output_dir=tmp_path / "csv_results")
     assert not result.snapshots.empty
     assert "buy_and_hold" in result.benchmark_results
+
+
+def test_paper_simulation_writes_text_report(tmp_path):
+    config = make_test_config(tmp_path)
+    config.risk.human_enabled = True
+    config.broker.mode = "paper"
+    result = run_paper_simulation(config, output_dir=tmp_path / "paper")
+
+    assert (Path(result["output_dir"]) / "paper_report.txt").exists()
+    assert (Path(result["output_dir"]) / "paper_simulation.json").exists()
