@@ -1,4 +1,4 @@
-# Trading Platform
+# This is just me experimenting with the capabilities of v*be coding
 
 `trading_platform` is a research-oriented quantitative trading framework built to behave more like a small internal quant team’s platform than a hobby bot. Version 1 starts in a fully simulated setting, supports historical CSV backtesting, includes walk-forward validation, exposes a guarded paper-trading path, and keeps live execution behind explicit safety gates.
 
